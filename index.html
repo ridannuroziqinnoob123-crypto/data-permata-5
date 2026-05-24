@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title> Dashboard Analytics Pro - Ultimate Edition</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #667eea;
+      --secondary: #764ba2;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #3b82f6;
+      --dark: #1e293b;
+      --light: #f8fafc;
+      --bg-gradient-start: #667eea;
+      --bg-gradient-end: #764ba2;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --border-color: #e2e8f0;
+      --shadow: 0 20px 60px rgba(0,0,0,0.3);
+      --shadow-sm: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    [data-theme="dark"] {
+      --bg-gradient-start: #1e293b;
+      --bg-gradient-end: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.95);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border-color: #334155;
+      --light: #1e293b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; transition: all 0.3s ease; }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+      padding: 20px;
+      color: var(--text-primary);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Animated Background Particles */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .particle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      animation: float 20s infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: auto;
+      background: var(--card-bg);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header Section */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid var(--border-color);
+    }
+    .header h1 {
+      font-size: 2.2rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border: none;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      color: white;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .theme-toggle:hover { transform: rotate(180deg) scale(1.1); }
+
+    /* Stats Grid */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 25px;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-card:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4); }
+    .stat-card .icon { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.9; }
+    .stat-card .value { font-size: 2rem; font-weight: bold; margin: 8px 0; }
+    .stat-card .label { font-size: 0.9rem; opacity: 0.95; }
+    .stat-card .change { 
+      font-size: 0.85rem; 
+      margin-top: 8px; 
+      padding: 4px 12px; 
+      background: rgba(255,255,255,0.2); 
+      border-radius: 20px; 
+      display: inline-block;
+    }
+    .change.positive { background: rgba(16, 185, 129, 0.3); }
+    .change.negative { background: rgba(239, 68, 68, 0.3); }
+
+    /* Filter Section */
+    .filter-section {
+      background: var(--light);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border: 1px solid var(--border-color);
+    }
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      align-items: end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; }
+    .filter-group label { font-weight: 600; color: var(--text-secondary); font-size: 0.9rem; }
+    .filter-group input, .filter-group select {
+      padding: 12px;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 1rem;
+      background: var(--card-bg);
+      color: var(--text-primary);
+    }
+    .filter-group input:focus, .filter-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Charts Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    .chart-card {
+      background: var(--light);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      position: relative;
+      overflow: hidden;
+    }
+    .chart-card.full-width { grid-column: 1 / -1; }
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .chart-header h3 {
+      color: var(--text-primary);
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .chart-actions { display: flex; gap: 8px; }
+    .chart-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    .chart-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    canvas { max-height: 320px; }
+
+    /* Table Section */
+    .table-section {
+      background: var(--light);
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 25px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+    }
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .table-header h3 {
+      color: var(--text-primary);
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .table-search {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .table-search input {
+      padding: 10px 16px;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      min-width: 250px;
+      background: var(--card-bg);
+      color: var(--text-primary);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    th {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 16px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      user-select: none;
+    }
+    th:hover { background: linear-gradient(135deg, var(--secondary), var(--primary)); }
+    th .sort-icon { margin-left: 8px; opacity: 0.7; }
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+    tr:hover { background: rgba(102, 126, 234, 0.05); }
+    tr.editing { background: rgba(16, 185, 129, 0.1); }
+    .editable { cursor: pointer; position: relative; }
+    .editable:hover { background: rgba(102, 126, 234, 0.1); }
+    .editable::after {
+      content: '✏️';
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0;
+      font-size: 0.8rem;
+    }
+    .editable:hover::after { opacity: 1; }
+
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 30px;
+      padding-top: 30px;
+      border-top: 2px solid var(--border-color);
+    }
+    .btn {
+      padding: 14px 28px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    .btn:hover::before { width: 300px; height: 300px; }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5); }
+    .btn:active { transform: translateY(-1px); }
+    .btn.secondary { background: var(--light); color: var(--text-primary); border: 2px solid var(--border-color); }
+    .btn.secondary:hover { background: var(--border-color); }
+    .btn.success { background: linear-gradient(135deg, #10b981, #059669); }
+    .btn.danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .btn.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: var(--card-bg);
+      padding: 40px;
+      border-radius: 20px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+      animation: modalSlide 0.3s ease;
+    }
+    @keyframes modalSlide {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--border-color);
+    }
+    .modal-header h2 { color: var(--text-primary); }
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .close-modal:hover { background: var(--light); color: var(--danger); }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 1rem;
+      background: var(--card-bg);
+      color: var(--text-primary);
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      background: var(--card-bg);
+      color: var(--text-primary);
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: toastSlide 0.3s ease;
+      border-left: 4px solid var(--primary);
+      min-width: 300px;
+    }
+    @keyframes toastSlide {
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .toast.success { border-left-color: var(--success); }
+    .toast.error { border-left-color: var(--danger); }
+    .toast.warning { border-left-color: var(--warning); }
+
+    /* Progress Bars */
+    .progress-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+    .progress-card {
+      background: var(--light);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .progress-bar {
+      height: 12px;
+      background: var(--border-color);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 6px;
+      transition: width 1s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container { padding: 20px; }
+      .header h1 { font-size: 1.5rem; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      table { font-size: 0.9rem; }
+      th, td { padding: 10px; }
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3000;
+    }
+    .spinner.active { display: block; }
+    .spinner-circle {
+      width: 60px;
+      height: 60px;
+      border: 4px solid var(--border-color);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Confetti */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background: var(--primary);
+      position: absolute;
+      animation: confetti-fall 3s linear forwards;
+      z-index: 9999;
+    }
+    @keyframes confetti-fall {
+      0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: var(--light); border-radius: 5px; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: linear-gradient(135deg, var(--secondary), var(--primary)); }
+  </style>
+</head>
+<body>
+  <!-- Animated Particles -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Loading Spinner -->
+  <div class="spinner" id="spinner">
+    <div class="spinner-circle"></div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Tambah Data</h2>
+        <button class="close-modal" onclick="closeModal()">&times;</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1><i class="fas fa-chart-line"></i> Dashboard Analytics Pro</h1>
+      <div class="header-controls">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+          <i class="fas fa-moon" id="themeIcon"></i>
+        </button>
+        <button class="btn secondary" onclick="toggleFullscreen()" title="Fullscreen">
+          <i class="fas fa-expand"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Stats -->
+    <div class="stats" id="statsContainer"></div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+      <div class="filter-grid">
+        <div class="filter-group">
+          <label><i class="fas fa-calendar"></i> Bulan</label>
+          <select id="filterMonth" onchange="applyFilters()">
+            <option value="">Semua Bulan</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label><i class="fas fa-tag"></i> Kategori</label>
+          <select id="filterCategory" onchange="applyFilters()">
+            <option value="">Semua Kategori</option>
+            <option value="elektronik">Elektronik</option>
+            <option value="fashion">Fashion</option>
+            <option value="makanan">Makanan</option>
+            <option value="otomotif">Otomotif</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label><i class="fas fa-sort-amount-down"></i> Urutkan</label>
+          <select id="sortBy" onchange="applyFilters()">
+            <option value="bulan">Bulan</option>
+            <option value="total">Total (Tertinggi)</option>
+            <option value="total-asc">Total (Terendah)</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>&nbsp;</label>
+          <button class="btn" onclick="resetFilters()" style="padding: 12px 20px;">
+            <i class="fas fa-undo"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Bars -->
+    <div class="progress-section" id="progressSection"></div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3><i class="fas fa-chart-pie"></i> Distribusi Kategori</h3>
+          <div class="chart-actions">
+            <button class="chart-btn" onclick="changeChartType('pie', 'pieChart')"><i class="fas fa-chart-pie"></i></button>
+            <button class="chart-btn" onclick="changeChartType('doughnut', 'pieChart')"><i class="fas fa-circle-notch"></i></button>
+            <button class="chart-btn" onclick="downloadChart('pieChart')"><i class="fas fa-download"></i></button>
+          </div>
+        </div>
+        <canvas id="pieChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3><i class="fas fa-chart-bar"></i> Perbandingan Bulanan</h3>
+          <div class="chart-actions">
+            <button class="chart-btn" onclick="changeChartType('bar', 'barChart')"><i class="fas fa-chart-bar"></i></button>
+            <button class="chart-btn" onclick="changeChartType('line', 'barChart')"><i class="fas fa-chart-line"></i></button>
+            <button class="chart-btn" onclick="downloadChart('barChart')"><i class="fas fa-download"></i></button>
+          </div>
+        </div>
+        <canvas id="barChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3><i class="fas fa-chart-area"></i> Tren Penjualan</h3>
+          <div class="chart-actions">
+            <button class="chart-btn" onclick="toggleSmoothLine()"><i class="fas fa-wave-square"></i></button>
+            <button class="chart-btn" onclick="downloadChart('lineChart')"><i class="fas fa-download"></i></button>
+          </div>
+        </div>
+        <canvas id="lineChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3><i class="fas fa-chart-radar"></i> Analisis Radar</h3>
+          <div class="chart-actions">
+            <button class="chart-btn" onclick="downloadChart('radarChart')"><i class="fas fa-download"></i></button>
+          </div>
+        </div>
+        <canvas id="radarChart"></canvas>
+      </div>
+
+      <div class="chart-card full-width">
+        <div class="chart-header">
+          <h3><i class="fas fa-chart-combined"></i> Komparasi Multi-Kategori</h3>
+          <div class="chart-actions">
+            <button class="chart-btn" onclick="downloadChart('multiChart')"><i class="fas fa-download"></i></button>
+          </div>
+        </div>
+        <canvas id="multiChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-section">
+      <div class="table-header">
+        <h3><i class="fas fa-table"></i> Data Lengkap</h3>
+        <div class="table-search">
+          <input type="text" id="tableSearch" placeholder="🔍 Cari data..." onkeyup="searchTable()">
+          <button class="btn" onclick="openAddModal()">
+            <i class="fas fa-plus"></i> Tambah
+          </button>
+        </div>
+      </div>
+      <div style="overflow-x: auto;">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable('bulan')">Bulan <i class="fas fa-sort sort-icon"></i></th>
+              <th onclick="sortTable('elektronik')">📱 Elektronik <i class="fas fa-sort sort-icon"></i></th>
+              <th onclick="sortTable('fashion')">👕 Fashion <i class="fas fa-sort sort-icon"></i></th>
+              <th onclick="sortTable('makanan')">🍜 Makanan <i class="fas fa-sort sort-icon"></i></th>
+              <th onclick="sortTable('otomotif')">🚗 Otomotif <i class="fas fa-sort sort-icon"></i></th>
+              <th onclick="sortTable('total')">💰 Total <i class="fas fa-sort sort-icon"></i></th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="btn-group">
+      <button class="btn" onclick="exportCSV()">
+        <i class="fas fa-file-csv"></i> Export CSV
+      </button>
+      <button class="btn" onclick="exportJSON()">
+        <i class="fas fa-file-code"></i> Export JSON
+      </button>
+      <button class="btn" onclick="exportPDF()">
+        <i class="fas fa-file-pdf"></i> Export PDF
+      </button>
+      <button class="btn secondary" onclick="importData()">
+        <i class="fas fa-upload"></i> Import Data
+      </button>
+      <button class="btn success" onclick="saveToLocalStorage()">
+        <i class="fas fa-save"></i> Simpan
+      </button>
+      <button class="btn warning" onclick="randomizeData()">
+        <i class="fas fa-dice"></i> Acak Data
+      </button>
+      <button class="btn danger" onclick="clearAllData()">
+        <i class="fas fa-trash"></i> Hapus Semua
+      </button>
+      <button class="btn" onclick="window.print()">
+        <i class="fas fa-print"></i> Print
+      </button>
+      <button class="btn secondary" onclick="showAbout()">
+        <i class="fas fa-info-circle"></i> Tentang
+      </button>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept=".csv,.json" style="display:none" onchange="handleFileImport(event)">
+
+  <script>
+    // 🔹 DATA
+    let originalData = [
+      { bulan: "Jan", elektronik: 120, fashion: 80, makanan: 200, otomotif: 50 },
+      { bulan: "Feb", elektronik: 150, fashion: 90, makanan: 210, otomotif: 60 },
+      { bulan: "Mar", elektronik: 180, fashion: 100, makanan: 230, otomotif: 70 },
+      { bulan: "Apr", elektronik: 200, fashion: 110, makanan: 250, otomotif: 80 },
+      { bulan: "Mei", elektronik: 190, fashion: 130, makanan: 240, otomotif: 90 },
+      { bulan: "Jun", elektronik: 210, fashion: 140, makanan: 260, otomotif: 100 },
+      { bulan: "Jul", elektronik: 230, fashion: 150, makanan: 280, otomotif: 110 },
+      { bulan: "Agu", elektronik: 220, fashion: 160, makanan: 270, otomotif: 120 },
+      { bulan: "Sep", elektronik: 240, fashion: 170, makanan: 290, otomotif: 130 },
+      { bulan: "Okt", elektronik: 260, fashion: 180, makanan: 310, otomotif: 140 },
+      { bulan: "Nov", elektronik: 280, fashion: 200, makanan: 330, otomotif: 150 },
+      { bulan: "Des", elektronik: 300, fashion: 220, makanan: 350, otomotif: 160 }
+    ];
+
+    let data = JSON.parse(JSON.stringify(originalData));
+    let charts = {};
+    let currentSort = { column: null, ascending: true };
+    let smoothLine = true;
+
+    const colors = {
+      elektronik: '#FF6384',
+      fashion: '#36A2EB',
+      makanan: '#FFCE56',
+      otomotif: '#4BC0C0',
+      total: '#764ba2',
+      gradient1: 'rgba(102, 126, 234, 0.8)',
+      gradient2: 'rgba(118, 75, 162, 0.8)'
+    };
+
+    // 🔹 INITIALIZATION
+    document.addEventListener('DOMContentLoaded', () => {
+      createParticles();
+      loadFromLocalStorage();
+      initFilterMonths();
+      renderAll();
+      
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          if (e.key === 's') { e.preventDefault(); saveToLocalStorage(); }
+          if (e.key === 'e') { e.preventDefault(); exportCSV(); }
+          if (e.key === 'f') { e.preventDefault(); document.getElementById('tableSearch').focus(); }
+        }
+        if (e.key === 'Escape') closeModal();
+      });
+    });
+
+    // 🔹 PARTICLES
+    function createParticles() {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 20; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+        container.appendChild(particle);
+      }
+    }
+
+    // 🔹 THEME
+    function toggleTheme() {
+      const html = document.documentElement;
+      const icon = document.getElementById('themeIcon');
+      if (html.getAttribute('data-theme') === 'dark') {
+        html.removeAttribute('data-theme');
+        icon.className = 'fas fa-moon';
+        localStorage.setItem('theme', 'light');
+      } else {
+        html.setAttribute('data-theme', 'dark');
+        icon.className = 'fas fa-sun';
+        localStorage.setItem('theme', 'dark');
+      }
+      renderAll();
+    }
+
+    // 🔹 FULLSCREEN
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // 🔹 STATISTICS
+    function calculateStats() {
+      const kategori = {
+        Elektronik: data.reduce((s, r) => s + r.elektronik, 0),
+        Fashion: data.reduce((s, r) => s + r.fashion, 0),
+        Makanan: data.reduce((s, r) => s + r.makanan, 0),
+        Otomotif: data.reduce((s, r) => s + r.otomotif, 0)
+      };
+      
+      const withTotal = data.map(r => ({
+        ...r,
+        total: r.elektronik + r.fashion + r.makanan + r.otomotif
+      }));
+      
+      const grandTotal = withTotal.reduce((s, r) => s + r.total, 0);
+      const avgBulanan = Math.round(grandTotal / withTotal.length);
+      const maxBulan = withTotal.reduce((max, r) => r.total > max.total ? r : max);
+      const minBulan = withTotal.reduce((min, r) => r.total < min.total ? r : min);
+      
+      const prevMonth = withTotal[withTotal.length - 2];
+      const currMonth = withTotal[withTotal.length - 1];
+      const growth = prevMonth ? (((currMonth.total - prevMonth.total) / prevMonth.total) * 100).toFixed(1) : 0;
+      
+      return { kategori, withTotal, grandTotal, avgBulanan, maxBulan, minBulan, growth };
+    }
+
+    function renderStats() {
+      const { grandTotal, avgBulanan, maxBulan, minBulan, growth } = calculateStats();
+      const growthClass = growth >= 0 ? 'positive' : 'negative';
+      const growthIcon = growth >= 0 ? '📈' : '📉';
+      
+      document.getElementById('statsContainer').innerHTML = `
+        <div class="stat-card" onclick="showToast('Total keseluruhan penjualan', 'info')">
+          <div class="icon">💰</div>
+          <div class="value">${grandTotal.toLocaleString()}</div>
+          <div class="label">Total Penjualan</div>
+        </div>
+        <div class="stat-card" onclick="showToast('Rata-rata per bulan', 'info')">
+          <div class="icon">📊</div>
+          <div class="value">${avgBulanan.toLocaleString()}</div>
+          <div class="label">Rata-rata/Bulan</div>
+        </div>
+        <div class="stat-card" onclick="showToast('Bulan dengan penjualan tertinggi: ${maxBulan.bulan}', 'success')">
+          <div class="icon">🔺</div>
+          <div class="value">${maxBulan.bulan}</div>
+          <div class="label">Tertinggi</div>
+          <div style="font-size:0.8rem;opacity:0.9">${maxBulan.total} unit</div>
+        </div>
+        <div class="stat-card" onclick="showToast('Bulan dengan penjualan terendah: ${minBulan.bulan}', 'warning')">
+          <div class="icon">🔻</div>
+          <div class="value">${minBulan.bulan}</div>
+          <div class="label">Terendah</div>
+          <div style="font-size:0.8rem;opacity:0.9">${minBulan.total} unit</div>
+        </div>
+        <div class="stat-card" onclick="showToast('Pertumbuhan bulan ini: ${growth}%', growth >= 0 ? 'success' : 'error')">
+          <div class="icon">${growthIcon}</div>
+          <div class="value">${growth}%</div>
+          <div class="label">Pertumbuhan</div>
+          <div class="change ${growthClass}">${growth >= 0 ? '+' : ''}${growth}% dari bulan lalu</div>
+        </div>
+      `;
+    }
+
+    // 🔹 PROGRESS BARS
+    function renderProgress() {
+      const { kategori, withTotal } = calculateStats();
+      const total = Object.values(kategori).reduce((a, b) => a + b, 0);
+      const maxTotal = Math.max(...withTotal.map(r => r.total));
+      
+      document.getElementById('progressSection').innerHTML = `
+        <div class="progress-card">
+          <div class="progress-header">
+            <span>📱 Elektronik</span>
+            <span>${kategori.Elektronik.toLocaleString()} (${((kategori.Elektronik/total)*100).toFixed(1)}%)</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${(kategori.Elektronik/total)*100}%"></div>
+          </div>
+        </div>
+        <div class="progress-card">
+          <div class="progress-header">
+            <span>👕 Fashion</span>
+            <span>${kategori.Fashion.toLocaleString()} (${((kategori.Fashion/total)*100).toFixed(1)}%)</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${(kategori.Fashion/total)*100}%; background: linear-gradient(135deg, #36A2EB, #9b59b6);"></div>
+          </div>
+        </div>
+        <div class="progress-card">
+          <div class="progress-header">
+            <span>🍜 Makanan</span>
+            <span>${kategori.Makanan.toLocaleString()} (${((kategori.Makanan/total)*100).toFixed(1)}%)</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${(kategori.Makanan/total)*100}%; background: linear-gradient(135deg, #FFCE56, #e67e22);"></div>
+          </div>
+        </div>
+        <div class="progress-card">
+          <div class="progress-header">
+            <span>🚗 Otomotif</span>
+            <span>${kategori.Otomotif.toLocaleString()} (${((kategori.Otomotif/total)*100).toFixed(1)}%)</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${(kategori.Otomotif/total)*100}%; background: linear-gradient(135deg, #4BC0C0, #1abc9c);"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    // 🔹 TABLE
+    function renderTable() {
+      const { withTotal } = calculateStats();
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      
+      withTotal.forEach((r, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>${r.bulan}</strong></td>
+          <td class="editable" onclick="editCell(${index}, 'elektronik')">${r.elektronik}</td>
+          <td class="editable" onclick="editCell(${index}, 'fashion')">${r.fashion}</td>
+          <td class="editable" onclick="editCell(${index}, 'makanan')">${r.makanan}</td>
+          <td class="editable" onclick="editCell(${index}, 'otomotif')">${r.otomotif}</td>
+          <td><strong style="color:var(--total)">${r.total}</strong></td>
+          <td>
+            <button class="chart-btn" onclick="deleteRow(${index})" title="Hapus">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function editCell(index, field) {
+      const newValue = prompt(`Edit ${field} untuk bulan ${data[index].bulan}:`, data[index][field]);
+      if (newValue !== null && !isNaN(newValue)) {
+        data[index][field] = parseInt(newValue);
+        renderAll();
+        showToast('Data berhasil diperbarui', 'success');
+        createConfetti();
+      }
+    }
+
+    function deleteRow(index) {
+      if (confirm('Yakin ingin menghapus data bulan ' + data[index].bulan + '?')) {
+        data.splice(index, 1);
+        renderAll();
+        showToast('Data dihapus', 'warning');
+      }
+    }
+
+    function sortTable(column) {
+      if (currentSort.column === column) {
+        currentSort.ascending = !currentSort.ascending;
+      } else {
+        currentSort.column = column;
+        currentSort.ascending = true;
+      }
+      
+      data.sort((a, b) => {
+        let valA = column === 'total' ? 
+          (a.elektronik + a.fashion + a.makanan + a.otomotif) : a[column];
+        let valB = column === 'total' ? 
+          (b.elektronik + b.fashion + b.makanan + b.otomotif) : b[column];
+        return currentSort.ascending ? valA - valB : valB - valA;
+      });
+      
+      renderTable();
+      renderAll();
+    }
+
+    function searchTable() {
+      const search = document.getElementById('tableSearch').value.toLowerCase();
+      const rows = document.querySelectorAll('#tableBody tr');
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(search) ? '' : 'none';
+      });
+    }
+
+    // 🔹 CHARTS
+    function renderPieChart() {
+      const { kategori } = calculateStats();
+      const ctx = document.getElementById('pieChart').getContext('2d');
+      
+      if (charts.pie) charts.pie.destroy();
+      
+      charts.pie = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(kategori),
+          datasets: [{
+            data: Object.values(kategori),
+            backgroundColor: [colors.elektronik, colors.fashion, colors.makanan, colors.otomotif],
+            borderWidth: 3,
+            borderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1e293b' : '#fff',
+            hoverOffset: 20
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } },
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  const total = Object.values(kategori).reduce((a,b) => a+b, 0);
+                  const percentage = ((ctx.parsed / total) * 100).toFixed(1);
+                  return `${ctx.label}: ${ctx.parsed.toLocaleString()} unit (${percentage}%)`;
+                }
+              }
+            }
+          },
+          animation: { animateScale: true, animateRotate: true }
+        }
+      });
+    }
+
+    function renderBarChart() {
+      const ctx = document.getElementById('barChart').getContext('2d');
+      
+      if (charts.bar) charts.bar.destroy();
+      
+      charts.bar = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.map(r => r.bulan),
+          datasets: [
+            { label: '📱 Elektronik', data: data.map(r => r.elektronik), backgroundColor: colors.elektronik, borderRadius: 8 },
+            { label: '👕 Fashion', data: data.map(r => r.fashion), backgroundColor: colors.fashion, borderRadius: 8 },
+            { label: '🍜 Makanan', data: data.map(r => r.makanan), backgroundColor: colors.makanan, borderRadius: 8 },
+            { label: '🚗 Otomotif', data: data.map(r => r.otomotif), backgroundColor: colors.otomotif, borderRadius: 8 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false } }
+          },
+          plugins: {
+            legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } }
+          }
+        }
+      });
+    }
+
+    function renderLineChart() {
+      const { withTotal } = calculateStats();
+      const ctx = document.getElementById('lineChart').getContext('2d');
+      
+      if (charts.line) charts.line.destroy();
+      
+      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, colors.gradient1);
+      gradient.addColorStop(1, colors.gradient2);
+      
+      charts.line = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.map(r => r.bulan),
+          datasets: [{
+            label: '💰 Total Penjualan',
+            data: withTotal.map(r => r.total),
+            borderColor: colors.total,
+            backgroundColor: gradient,
+            borderWidth: 3,
+            fill: true,
+            tension: smoothLine ? 0.4 : 0,
+            pointRadius: 7,
+            pointBackgroundColor: colors.total,
+            pointBorderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1e293b' : '#fff',
+            pointBorderWidth: 3,
+            pointHoverRadius: 10
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false } }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function renderRadarChart() {
+      const { kategori } = calculateStats();
+      const ctx = document.getElementById('radarChart').getContext('2d');
+      
+      if (charts.radar) charts.radar.destroy();
+      
+      charts.radar = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: Object.keys(kategori),
+          datasets: [{
+            label: 'Total per Kategori',
+            data: Object.values(kategori),
+            backgroundColor: 'rgba(102, 126, 234, 0.2)',
+            borderColor: colors.total,
+            borderWidth: 3,
+            pointBackgroundColor: colors.total,
+            pointBorderColor: '#fff',
+            pointHoverRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              beginAtZero: true,
+              ticks: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    function renderMultiChart() {
+      const ctx = document.getElementById('multiChart').getContext('2d');
+      
+      if (charts.multi) charts.multi.destroy();
+      
+      charts.multi = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.map(r => r.bulan),
+          datasets: [
+            {
+              type: 'line',
+              label: 'Total',
+              data: data.map(r => r.elektronik + r.fashion + r.makanan + r.otomotif),
+              borderColor: colors.total,
+              backgroundColor: 'transparent',
+              borderWidth: 3,
+              yAxisID: 'y1',
+              tension: 0.4
+            },
+            {
+              type: 'bar',
+              label: 'Elektronik',
+              data: data.map(r => r.elektronik),
+              backgroundColor: colors.elektronik,
+              yAxisID: 'y'
+            },
+            {
+              type: 'bar',
+              label: 'Fashion',
+              data: data.map(r => r.fashion),
+              backgroundColor: colors.fashion,
+              yAxisID: 'y'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { type: 'linear', display: true, position: 'left' },
+            y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } }
+          }
+        }
+      });
+    }
+
+    // 🔹 FILTERS
+    function initFilterMonths() {
+      const select = document.getElementById('filterMonth');
+      data.forEach(r => {
+        const option = document.createElement('option');
+        option.value = r.bulan;
+        option.textContent = r.bulan;
+        select.appendChild(option);
+      });
+    }
+
+    function applyFilters() {
+      const month = document.getElementById('filterMonth').value;
+      const category = document.getElementById('filterCategory').value;
+      const sortBy = document.getElementById('sortBy').value;
+      
+      data = JSON.parse(JSON.stringify(originalData));
+      
+      if (month) data = data.filter(r => r.bulan === month);
+      
+      if (sortBy === 'total') {
+        data.sort((a, b) => (b.elektronik + b.fashion + b.makanan + b.otomotif) - (a.elektronik + a.fashion + a.makanan + a.otomotif));
+      } else if (sortBy === 'total-asc') {
+        data.sort((a, b) => (a.elektronik + a.fashion + a.makanan + a.otomotif) - (b.elektronik + b.fashion + b.makanan + b.otomotif));
+      }
+      
+      renderAll();
+      showToast('Filter diterapkan', 'info');
+    }
+
+    function resetFilters() {
+      document.getElementById('filterMonth').value = '';
+      document.getElementById('filterCategory').value = '';
+      document.getElementById('sortBy').value = 'bulan';
+      data = JSON.parse(JSON.stringify(originalData));
+      renderAll();
+      showToast('Filter direset', 'info');
+    }
+
+    // 🔹 ACTIONS
+    function changeChartType(type, chartId) {
+      if (chartId === 'pieChart') {
+        charts.pie.config.type = type;
+        charts.pie.update();
+      } else if (chartId === 'barChart') {
+        charts.bar.config.type = type;
+        charts.bar.update();
+      }
+      showToast(`Chart diubah ke ${type}`, 'success');
+    }
+
+    function toggleSmoothLine() {
+      smoothLine = !smoothLine;
+      renderLineChart();
+      showToast(smoothLine ? 'Garis smooth diaktifkan' : 'Garis smooth dinonaktifkan', 'info');
+    }
+
+    function downloadChart(chartId) {
+      const canvas = document.getElementById(chartId);
+      const link = document.createElement('a');
+      link.download = `chart_${chartId}_${Date.now()}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+      showToast('Chart diunduh', 'success');
+    }
+
+    function exportCSV() {
+      const { withTotal } = calculateStats();
+      let csv = "Bulan,Elektronik,Fashion,Makanan,Otomotif,Total\n";
+      withTotal.forEach(r => {
+        csv += `${r.bulan},${r.elektronik},${r.fashion},${r.makanan},${r.otomotif},${r.total}\n`;
+      });
+      downloadFile(csv, `data_penjualan_${Date.now()}.csv`, 'text/csv');
+      showToast('CSV diekspor', 'success');
+      createConfetti();
+    }
+
+    function exportJSON() {
+      const json = JSON.stringify(data, null, 2);
+      downloadFile(json, `data_penjualan_${Date.now()}.json`, 'application/json');
+      showToast('JSON diekspor', 'success');
+    }
+
+    function exportPDF() {
+      window.print();
+      showToast('Mencetak PDF...', 'info');
+    }
+
+    function downloadFile(content, filename, type) {
+      const blob = new Blob(["\ufeff" + content], { type: type + ';charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+
+    function importData() {
+      document.getElementById('fileInput').click();
+    }
+
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          if (file.name.endsWith('.json')) {
+            data = JSON.parse(e.target.result);
+          } else {
+            // Parse CSV
+            const lines = e.target.result.split('\n');
+            data = [];
+            for (let i = 1; i < lines.length; i++) {
+              const cols = lines[i].split(',');
+              if (cols.length >= 6) {
+                data.push({
+                  bulan: cols[0],
+                  elektronik: parseInt(cols[1]) || 0,
+                  fashion: parseInt(cols[2]) || 0,
+                  makanan: parseInt(cols[3]) || 0,
+                  otomotif: parseInt(cols[4]) || 0
+                });
+              }
+            }
+          }
+          originalData = JSON.parse(JSON.stringify(data));
+          renderAll();
+          showToast('Data berhasil diimport', 'success');
+          createConfetti();
+        } catch (err) {
+          showToast('Error import data: ' + err.message, 'error');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem('dashboardData', JSON.stringify(data));
+      localStorage.setItem('theme', document.documentElement.getAttribute('data-theme') || 'light');
+      showToast('Data tersimpan', 'success');
+    }
+
+    function loadFromLocalStorage() {
+      const saved = localStorage.getItem('dashboardData');
+      const theme = localStorage.getItem('theme');
+      if (saved) {
+        data = JSON.parse(saved);
+        originalData = JSON.parse(JSON.stringify(data));
+      }
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('themeIcon').className = 'fas fa-sun';
+      }
+    }
+
+    function randomizeData() {
+      data = data.map(r => ({
+        bulan: r.bulan,
+        elektronik: Math.floor(Math.random() * 200) + 80,
+        fashion: Math.floor(Math.random() * 150) + 60,
+        makanan: Math.floor(Math.random() * 250) + 150,
+        otomotif: Math.floor(Math.random() * 100) + 40
+      }));
+      originalData = JSON.parse(JSON.stringify(data));
+      renderAll();
+      showToast('Data diacak', 'warning');
+      createConfetti();
+    }
+
+    function clearAllData() {
+      if (confirm('Yakin ingin menghapus semua data?')) {
+        data = [];
+        originalData = [];
+        renderAll();
+        showToast('Semua data dihapus', 'error');
+      }
+    }
+
+    // 🔹 MODAL
+    function openAddModal() {
+      document.getElementById('modalTitle').textContent = 'Tambah Data Baru';
+      document.getElementById('modalBody').innerHTML = `
+        <form onsubmit="addData(event)">
+          <div class="form-group">
+            <label>Bulan</label>
+            <input type="text" name="bulan" required placeholder="Contoh: Jan">
+          </div>
+          <div class="form-group">
+            <label>Elektronik</label>
+            <input type="number" name="elektronik" required min="0">
+          </div>
+          <div class="form-group">
+            <label>Fashion</label>
+            <input type="number" name="fashion" required min="0">
+          </div>
+          <div class="form-group">
+            <label>Makanan</label>
+            <input type="number" name="makanan" required min="0">
+          </div>
+          <div class="form-group">
+            <label>Otomotif</label>
+            <input type="number" name="otomotif" required min="0">
+          </div>
+          <button type="submit" class="btn" style="width:100%">
+            <i class="fas fa-plus"></i> Tambah Data
+          </button>
+        </form>
+      `;
+      document.getElementById('modal').classList.add('active');
+    }
+
+    function addData(e) {
+      e.preventDefault();
+      const form = e.target;
+      const newData = {
+        bulan: form.bulan.value,
+        elektronik: parseInt(form.elektronik.value),
+        fashion: parseInt(form.fashion.value),
+        makanan: parseInt(form.makanan.value),
+        otomotif: parseInt(form.otomotif.value)
+      };
+      data.push(newData);
+      originalData = JSON.parse(JSON.stringify(data));
+      closeModal();
+      renderAll();
+      showToast('Data berhasil ditambahkan', 'success');
+      createConfetti();
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+    }
+
+    // 🔹 TOAST
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      
+      const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+      };
+      
+      toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(400px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // 🔹 CONFETTI
+    function createConfetti() {
+      for (let i = 0; i < 50; i++) {
+        setTimeout(() => {
+          const confetti = document.createElement('div');
+          confetti.className = 'confetti';
+          confetti.style.left = Math.random() * 100 + 'vw';
+          confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+          confetti.style.animationDuration = (2 + Math.random() * 2) + 's';
+          document.body.appendChild(confetti);
+          setTimeout(() => confetti.remove(), 4000);
+        }, i * 30);
+      }
+    }
+
+    // 🔹 ABOUT
+    function showAbout() {
+      alert('🎯 Dashboard Analytics Pro\n\nFitur:\n✅ Multi Chart Types\n✅ Dark/Light Mode\n✅ Edit Data Inline\n✅ Import/Export (CSV/JSON)\n✅ Filter & Search\n✅ LocalStorage\n✅ Responsive Design\n✅ Animations\n\nShortcut:\nCtrl+S = Save\nCtrl+E = Export CSV\nCtrl+F = Search\nEsc = Close Modal\n\n© 2024 - Created with ❤️');
+    }
+
+    // 🔹 RENDER ALL
+    function renderAll() {
+      renderStats();
+      renderTable();
+      renderProgress();
+      renderPieChart();
+      renderBarChart();
+      renderLineChart();
+      renderRadarChart();
+      renderMultiChart();
+    }
+
+    // Close modal on outside click
+    window.onclick = function(event) {
+      const modal = document.getElementById('modal');
+      if (event.target === modal) closeModal();
+    }
+  </script>
+</body>
+</html>
